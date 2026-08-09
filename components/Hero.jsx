@@ -1,0 +1,131 @@
+"use client";
+
+import { Play, Pause, Sparkles } from "lucide-react";
+import CoverImage from "@/components/CoverImage";
+import Equalizer from "@/components/Equalizer";
+import { useMusicPlayer } from "@/context/MusicPlayerContext";
+
+export default function Hero({ songs = [] }) {
+  const { currentSong, isPlaying, playSong } = useMusicPlayer();
+  const featured = songs[0] || null;
+  const featuredIsPlaying =
+    isPlaying && currentSong && featured && currentSong.id === featured.id;
+
+  return (
+    <section className="relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+      >
+        <div className="animate-glow absolute -top-32 -left-32 h-96 w-96 rounded-full bg-purple-600/25 blur-3xl" />
+        <div className="animate-glow absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-pink-600/20 blur-3xl [animation-delay:2s]" />
+        <div className="absolute bottom-0 left-1/2 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-fuchsia-600/10 blur-3xl" />
+      </div>
+
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-14 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8 lg:pt-24 lg:pb-28">
+        <div className="animate-fade-up text-center lg:text-left">
+          <span className="inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-4 py-1.5 text-xs font-medium text-purple-300">
+            <Sparkles size={14} />
+            Your music, your vibe
+          </span>
+          <h1 className="font-heading mt-6 text-4xl leading-[1.05] font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            Music that
+            <br />
+            <span className="text-gradient">moves with you.</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-md text-base text-zinc-400 sm:text-lg lg:mx-0">
+            Discover new sounds, create your vibe, and enjoy your favorite
+            music anywhere.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+            <a
+              href="/discover"
+              className="btn-gradient inline-flex h-12 items-center justify-center rounded-full px-7 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition duration-300 hover:brightness-110 hover:shadow-purple-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70"
+            >
+              Start Listening
+            </a>
+            <a
+              href="#featured"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-white/10 bg-white/5 px-7 text-sm font-semibold text-white transition duration-300 hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70"
+            >
+              Explore Music
+            </a>
+          </div>
+        </div>
+
+        <div className="animate-fade-up relative mx-auto w-full max-w-sm [animation-delay:150ms]">
+          <div
+            aria-hidden="true"
+            className="absolute -inset-6 -z-10 rounded-full bg-gradient-to-tr from-purple-600/30 to-pink-500/30 blur-2xl"
+          />
+          <div className="relative">
+            <div
+              className={`relative aspect-square overflow-hidden rounded-full border border-white/10 shadow-2xl shadow-purple-900/40 ${
+                featuredIsPlaying ? "animate-spin-slow" : ""
+              }`}
+            >
+              <CoverImage
+                src={featured?.coverUrl}
+                alt={featured ? `${featured.title} by ${featured.artist}` : "VibeFlow"}
+                className="scale-110"
+              />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/30 to-transparent" />
+            </div>
+
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-white text-black shadow-xl">
+                <span className="font-heading text-lg font-bold">V</span>
+              </div>
+            </div>
+
+            {featured ? (
+              <button
+                type="button"
+                aria-label={
+                  featuredIsPlaying
+                    ? `Pause ${featured.title}`
+                    : `Play ${featured.title}`
+                }
+                onClick={() => playSong(featured, songs)}
+                className="btn-gradient absolute right-4 bottom-4 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl shadow-purple-500/40 transition duration-300 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                {featuredIsPlaying ? (
+                  <Pause size={24} className="fill-current" />
+                ) : (
+                  <Play size={24} className="ml-0.5 fill-current" />
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                aria-label="No songs available yet"
+                className="absolute right-4 bottom-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-700 text-zinc-400 shadow-xl"
+              >
+                <Play size={24} className="ml-0.5 fill-current" />
+              </button>
+            )}
+
+            {featured && (
+              <div className="animate-pop absolute bottom-4 -left-2 max-w-[11rem] rounded-2xl border border-white/10 bg-black/60 p-3 shadow-xl backdrop-blur-xl sm:-left-6">
+                <div className="flex items-center gap-2.5">
+                  {currentSong && currentSong.id === featured.id && (
+                    <Equalizer active={isPlaying} className="text-purple-300" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-white">
+                      {featured.title}
+                    </p>
+                    <p className="truncate text-xs text-zinc-400">
+                      {featured.artist}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
