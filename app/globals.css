@@ -117,6 +117,121 @@ body {
   height: 30%;
 }
 
+/* Hero music visualizer — LED / pixel equalizer */
+@property --level {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.viz-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(120% 90% at 50% 115%, rgba(139, 92, 246, 0.22), transparent 60%),
+    linear-gradient(180deg, #0d0d13, #070709);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -24px 60px rgba(139, 92, 246, 0.12),
+    0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.viz-grid {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 10rem;
+}
+
+@media (min-width: 640px) {
+  .viz-grid {
+    gap: 5px;
+    height: 12.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .viz-grid {
+    gap: 6px;
+    height: 16rem;
+  }
+}
+
+.viz-column {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: var(--viz-gap, 4px);
+  --level: var(--col-min, 0.12);
+  animation: viz-level var(--col-duration, 0.9s) ease-in-out var(--col-delay, 0s) infinite;
+  will-change: --level;
+}
+
+.viz-column.idle {
+  animation: viz-level-idle 3.4s ease-in-out 0s infinite;
+}
+
+.viz-column.stopped {
+  animation: none;
+}
+
+.viz-block {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--viz-size, 6px);
+  height: var(--viz-size, 6px);
+  border-radius: 3px;
+  background: #16161f;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.viz-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #f9a8d4 0%, #e879f9 55%, #8b5cf6 100%);
+  box-shadow:
+    0 0 6px rgba(217, 70, 239, 0.9),
+    0 0 14px rgba(168, 85, 247, 0.55);
+  opacity: clamp(0, calc((var(--level, 0) - var(--threshold, 1)) * 1000), 1);
+}
+
+@keyframes viz-level {
+  0%,
+  100% {
+    --level: var(--col-min, 0.12);
+  }
+  50% {
+    --level: var(--col-max, 0.8);
+  }
+}
+
+@keyframes viz-level-idle {
+  0%,
+  100% {
+    --level: var(--col-min, 0.12);
+  }
+  50% {
+    --level: calc(var(--col-min, 0.12) * 1.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viz-column,
+  .viz-column.idle {
+    animation: none;
+    --level: var(--col-min, 0.12);
+  }
+}
+
 /* Thin scrollbars for horizontal scrollers */
 .scrollbar-hide {
   -ms-overflow-style: none;

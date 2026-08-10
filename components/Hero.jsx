@@ -1,8 +1,9 @@
 "use client";
 
-import { Play, Pause, Sparkles } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import CoverImage from "@/components/CoverImage";
 import Equalizer from "@/components/Equalizer";
+import MusicVisualizer from "@/components/MusicVisualizer";
 import { useMusicPlayer } from "@/context/MusicPlayerContext";
 
 export default function Hero() {
@@ -20,35 +21,9 @@ export default function Hero() {
         <div className="absolute bottom-0 left-1/2 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-fuchsia-600/10 blur-3xl" />
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-14 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8 lg:pt-24 lg:pb-28">
-        <div className="animate-fade-up text-center lg:text-left">
-          <span className="inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-4 py-1.5 text-xs font-medium text-purple-300">
-            <Sparkles size={14} />
-            Your music, your vibe
-          </span>
-          <h1 className="font-heading mt-6 text-4xl leading-[1.05] font-bold tracking-tight sm:text-5xl lg:text-6xl">
-            Music that
-            <br />
-            <span className="text-gradient">moves with you.</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-md text-base text-zinc-400 sm:text-lg lg:mx-0">
-            Discover new sounds, create your vibe, and enjoy your favorite
-            music anywhere.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-            <a
-              href="/discover"
-              className="btn-gradient inline-flex h-12 items-center justify-center rounded-full px-7 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition duration-300 hover:brightness-110 hover:shadow-purple-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70"
-            >
-              Start Listening
-            </a>
-            <a
-              href="#featured"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-white/10 bg-white/5 px-7 text-sm font-semibold text-white transition duration-300 hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70"
-            >
-              Explore Music
-            </a>
-          </div>
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-14 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-2 lg:gap-10 lg:px-8 lg:pt-24 lg:pb-28">
+        <div className="animate-fade-up">
+          <MusicVisualizer />
         </div>
 
         <div className="animate-fade-up relative mx-auto w-full max-w-sm [animation-delay:150ms]">
