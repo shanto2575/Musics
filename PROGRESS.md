@@ -34,6 +34,7 @@ In Progress — Phase 6/9 (Admin Dashboard). Database & Cloudinary integration *
 - [x] Admin edit song modal (fields + optional replace audio/cover)
 - [x] Admin delete song modal (with Cloudinary cleanup)
 - [x] Admin artists / playlists / settings pages (+ seed sample data tool)
+- [x] User signup page (/signup) with validation, auto-sign-in, and role-safe registration (role always "user")
 - [x] Empty states, loading skeletons, error handling across pages
 
 ## In Progress
@@ -45,6 +46,58 @@ In Progress — Phase 6/9 (Admin Dashboard). Database & Cloudinary integration *
 - [ ] None — only the polish pass above remains before final release QA.
 
 ## Recent Changes
+
+### 2026-08-10 (Auth configuration verification + build fix)
+
+- **Root cause of the build failure** (`MONGODB_URI is required for authentication.`): `lib/auth.js` reads `process.env.MONGODB_URI` at module load and throws when it is missing. The build previously ran before `.env.local` existed, so the env var was absent during `next build`. The fix is configuration, not code: `.env.local` now contains `MONGODB_URI` (plus the Better Auth vars), so the build loads it. Confirmed `lib/auth.js` reads `process.env.MONGODB_URI` — the URI is **never hardcoded** anywhere in source; it lives only in git-ignored `.env.local` (and must be provided by the platform, e.g. Vercel dashboard, in production).
+- **Build does not depend on a running MongoDB server**: `new MongoClient(...)`/`mongodbAdapter(...)` connect lazily (no I/O at module load), so `next build` only needs the env var, not a live database. Verified by running the final build with **no local `mongod` running** — it compiled and generated all routes, with `/api/auth/[...all]` in the route list.
+- **Auth flow verified end-to-end in dev** (fresh `npm run dev` restart so `.env.local` is definitely loaded):
+  - `GET /login` → 200; `GET /signup` → 200 (both render).
+  - `POST /api/auth/sign-up/email` → 200, new account stored with `role: "user"` (MongoDB write).
+  - `POST /api/auth/sign-in/email` (normal user) → 200; `GET /api/auth/get-session` returns the session with `role: "user"` (MongoDB read).
+  - Admin protection: `POST /api/songs` without a session → **401**; with a normal-user session → **403**; `GET /admin` without a session → **307 → /login**.
+  - Admin login: promoted a throwaway account to `role: "admin"`, sign-in → session `role: "admin"`; `POST /api/songs` as admin passes the guard (400 from field validation, not 401/403); `GET /admin` with admin session → 200.
+  - `POST /api/auth/sign-out` (requires the `Origin` header, which browsers always send on POST — curl/PowerShell omit it, hence earlier 403s) → 200, session revoked server-side; `get-session` → null afterward.
+  - **MongoDB auth data read/write confirmed** at the DB level: signup creates a `user` + credential `account` row, sign-in creates a `session` row, sign-out deletes it.
+- **No secrets exposed**: actual `MONGODB_URI`, Better Auth secret, Cloudinary keys, or seed passwords never appear in logs or `PROGRESS.md`; only their host/state is described. `.env.local` remains git-ignored and untracked.
+- Test account and all test session rows were cleaned up afterwards (auth DB returned to its pre-test state; existing seeded accounts untouched).
+- `npm run build` passes (final verification). `npm run lint` unchanged and clean.
+
+### 2026-08-10 (User Signup / Registration)
+
+- **Added `/signup`** (`app/signup/page.jsx`, client component) using the existing Better Auth system — no second auth system. Fields: Name, Email, Password, Confirm Password, and a **Create Account** button, plus an "Already have an account? **Login**" link to `/login`. Styled to match the login card (glassmorphism, gradient button, glow background).
+- **Signup behavior**: `authClient.signUp.email()` creates the account and **auto-signs-in** (Better Auth returns a session cookie by default — `autoSignIn` is not disabled and `requireEmailVerification` is off). On success a green "Account created! Redirecting you to Discover…" state is shown, then the user is redirected to `/discover`. Already-signed-in visitors to `/signup` are redirected (admin → `/admin`, user → `/discover`).
+- **Role safety**: the app never sends a role. `role` is an additional field with `defaultValue: "user"` and `input: false` (`lib/auth.js`), so the server strips any client-submitted role — public signup can never create an admin. This is enforced server-side by Better Auth, not just the form.
+- **Validation** (client + server): name required; email format checked client-side (`INVALID_EMAIL` mapped server-side too); password required and must meet Better Auth's minimum (8 chars → `PASSWORD_TOO_SHORT` is mapped); Confirm Password must match (client-side "Passwords do not match."); duplicate emails rejected with "An account with this email already exists." (Better Auth `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL`); any other failure surfaces as "Registration failed…".
+- **Login page** now shows "Don't have an account? **Sign up**" → `/signup`; the existing login flow is unchanged.
+- **Navigation**: guest navbar (desktop + mobile menu) shows **Login** + **Get Started**, and **Get Started now goes to `/signup`** (was `/discover`). Authenticated users still see only their account pill + Logout; admins see Admin Dashboard + Logout.
+- **Env docs**: `.env.example` now documents the Better Auth vars (`BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`) and the auth seed vars (`ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `USER_EMAIL`, `USER_PASSWORD`) as empty placeholders. `.env.local` already holds the upgraded admin email/password values; real credentials remain in `.env.local` only (never printed or committed).
+- **In-browser verification (headless Chrome, temp-dir puppeteer-core, no project deps)** — **33/33 checks pass**:
+  - Guest `/signup` renders all 4 fields + Create Account + "Already have an account? Login" (href `/login`).
+  - Guest navbar "Get Started" → `/signup` (desktop + mobile menu).
+  - Password mismatch rejected with "Passwords do not match." and stays on `/signup`.
+  - Successful signup shows success state → auto-login → `/discover`; navbar shows Logout and no Login/Signup.
+  - New user cannot access `/admin` or `/admin/songs` (redirected to `/discover`).
+  - Logout clears the session cookie; re-login with the newly created account works (`/discover`).
+  - Duplicate email rejected with "An account with this email already exists." and stays on `/signup`.
+  - Mobile (375px): `/signup` renders with no horizontal overflow and all fields visible; guest hamburger menu shows Get Started → `/signup`.
+  - **DB check**: the newly created account exists in `vibeflow_auth` with `role: "user"`.
+  - Existing **admin login regression**: admin sign-in → `/admin` dashboard works; admin logout works.
+- Test users/accounts/sessions cleaned up afterwards (auth DB left tidy: 2 seed users, 0 sessions, 0 orphans).
+- `npm run lint` + `npm run build` clean; production server restarted on the new build (`/signup` now a prerendered static route).
+
+### 2026-08-10 (Auth seed credentials moved to environment variables)
+
+- **Seed credentials now come only from `.env.local`** (`scripts/seed-admin.mjs`): the admin seed uses `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` (role `admin`) and the test user seed uses `USER_EMAIL` / `USER_PASSWORD` (role `user`). No credentials are hardcoded in source; passwords are never logged or written to `PROGRESS.md`.
+- **Fixed a latent bug in the seed script**: with the Better Auth Mongo adapter, user documents store their id as `_id` (an `ObjectId`) — there is **no** string `id` field, and `auth.api.signUpEmail` returns a `user.id` that does **not** match the stored `_id`. `account`/`session` `userId` fields are also `ObjectId`s. The old script filtered by the phantom id, so role updates silently no-oped and cleanup deleted nothing. The script now keys off `email` / `_id` (via `ObjectId`), which fixed stale-role and orphan cleanup.
+- **The seed now verifies passwords end-to-end**: for each configured account it attempts a real sign-in with the configured password; if the existing account cannot log in (i.e. its password is stale), the account is recreated with the current password and the correct role. Existing accounts whose passwords still work are left untouched (role corrected if needed).
+- **No conflicting seed accounts left behind**: after seeding, any other `role: "admin"` accounts (old admin emails) are demoted to `user`, and the `USER_EMAIL` account is force-kept at `role: "user"` so the test user can never be admin.
+- **Database state verified against live MongoDB** (`vibeflow_auth`): exactly two users — the configured admin (`role: admin`) and the configured user (`role: user`); 0 sessions, 2 credential accounts, 0 orphaned rows. Both accounts were verified to sign in with their configured passwords via the Better Auth API.
+- **Public signup always creates `role = "user"`**: `role` is an additional field with `defaultValue: "user"` and `input: false` (`lib/auth.js`), so the API ignores any submitted role. Verified live: `POST /api/auth/sign-up/email` with `role: "admin"` in the body still created the user with `role: "user"` (throwaway account cleaned up afterwards).
+- **In-browser verification (headless Chrome, temp-dir puppeteer-core, no project deps)** — **24/24 checks pass** against the restarted server:
+  - Admin (configured admin creds): login → `/admin`, dashboard loads, sidebar Home → `/` (session intact, Admin Dashboard link + Logout visible), navbar Admin Dashboard → `/admin`, Songs page lists songs, Upload Song page renders, logout → `/login`, session cookies cleared.
+  - User (configured user creds): login → `/discover`, can access `/`, `/discover`, `/artists`, `/playlists` while logged in, cannot access `/admin` or `/admin/*` (redirected to `/discover`), logout → `/login`, session cookies cleared, music player UI gone, and the real HTML5 audio element had `pause()` invoked during logout.
+- `npm run lint` and `npm run build` clean. Production server restarted on the fresh build; `.env.local` values loaded.
 
 ### 2026-08-10 (Navigation, auth state UI, music stop on logout)
 
@@ -132,6 +185,7 @@ In Progress — Phase 6/9 (Admin Dashboard). Database & Cloudinary integration *
 - Fixed 2026-08-10: `POST /api/upload` returned 500 for non-multipart bodies — now returns a clear 400.
 - Fixed 2026-08-10: player Next/Previous appeared broken when starting from a song card/row/hero — `playSong` only ever built a 1-song queue; it now accepts the surrounding list and seeds the playlist so Next/Previous cycle through the songs (with correct wrap-around at both ends).
 - Fixed 2026-08-10: no working Logout for authenticated users — the navbar showed "Signed in" with no action. Added a Logout button (desktop + mobile) using the existing Better Auth `authClient.signOut()`, and hardened the admin sidebar logout to verify the server response before redirecting.
+- Fixed 2026-08-10: auth seed script operated on a phantom user id — Better Auth's Mongo adapter stores the user id as `_id` (ObjectId, no string `id` field) and `signUpEmail` returns a mismatched `user.id`; `account`/`session` `userId` are ObjectIds. The script now keys off `email`/`_id`, signs in with the configured password to detect stale credentials, and recreates the account only when the configured password no longer works.
 - No known bugs remaining.
 
 ## Technical Decisions
@@ -148,7 +202,8 @@ In Progress — Phase 6/9 (Admin Dashboard). Database & Cloudinary integration *
 - CoverImage falls back to a purple/pink gradient with the title initial when no coverUrl exists
 - `.env.local` is git-ignored; secrets never enter source code or PROGRESS.md
 - Server-side Cloudinary operations only (secrets never sent to the client)
-- Auth via **Better Auth 1.6.26** (single system): `lib/auth.js` (server, Mongo adapter + `role` additional field), `lib/auth-client.js` (`createAuthClient`, resolves base URL from `window.location.origin`), `app/api/auth/[...all]/route.js`. Admin routes/APIs guarded by `requireAdmin` / the `/admin` layout. Logout uses the official `authClient.signOut()` — never manual cookie deletion or frontend-only state.
+- Auth via **Better Auth 1.6.26** (single system): `lib/auth.js` (server, Mongo adapter + `role` additional field), `lib/auth-client.js` (`createAuthClient`, resolves base URL from `window.location.origin`), `app/api/auth/[...all]/route.js`. Admin routes/APIs guarded by `requireAdmin` / the `/admin` layout. Logout uses the official `authClient.signOut()` — never manual cookie deletion or frontend-only state. `role` has `input: false` + `defaultValue: "user"`, so public signup can never create an admin.
+- Auth seed accounts (`npm run seed:admin`) are created from env only: `ADMIN_NAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD` (role `admin`) and `USER_EMAIL`/`USER_PASSWORD` (role `user`), read solely from `process.env` (loaded from `.env.local`).
 - Navbar/account area is session-driven via `authClient.getSession()` (with a `checkingSession` gate to avoid flashing Login to authenticated users); admin ↔ public navigation uses Next `<Link>` client-side navigation (no page reloads).
 - MusicPlayerContext exposes `stopAndResetPlayer()` — pauses the real HTML5 audio, zeroes `currentTime`, removes `src` + `load()` (releases the stream, `networkState` 0), and clears all player state. Both logout handlers call it before sign-out so no audio keeps playing after logout.
 

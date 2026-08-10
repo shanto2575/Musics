@@ -6,17 +6,21 @@ import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+function errorResponse(message, status) {
+  return NextResponse.json(
+    { success: false, message, error: message },
+    { status }
+  );
+}
+
 export async function GET() {
   try {
     await connectToDatabase();
     const songs = await Song.find().sort({ createdAt: -1 }).lean();
-    return NextResponse.json({ songs: serializeSongs(songs) });
+    return NextResponse.json({ success: true, songs: serializeSongs(songs) });
   } catch (error) {
     console.error("GET /api/songs failed:", error);
-    return NextResponse.json(
-      { error: "Failed to load songs. Please try again." },
-      { status: 500 }
-    );
+    return errorResponse("Failed to load songs. Please try again.", 500);
   }
 }
 
@@ -36,9 +40,9 @@ export async function POST(request) {
     const audioUrl = String(body.audioUrl || "").trim();
 
     if (!title || !artist || !genre || !audioUrl) {
-      return NextResponse.json(
-        { error: "Title, artist, genre, and audio URL are required." },
-        { status: 400 }
+      return errorResponse(
+        "Title, artist, genre, and audio URL are required.",
+        400
       );
     }
 
@@ -56,12 +60,12 @@ export async function POST(request) {
       coverPublicId: String(body.coverPublicId || "").trim(),
     });
 
-    return NextResponse.json({ song: serializeSong(song) }, { status: 201 });
+    return NextResponse.json(
+      { success: true, song: serializeSong(song) },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("POST /api/songs failed:", error);
-    return NextResponse.json(
-      { error: "Failed to save song. Please try again." },
-      { status: 500 }
-    );
+    return errorResponse("Failed to save song. Please try again.", 500);
   }
 }

@@ -44,11 +44,18 @@ function guessImageType(name) {
   return null;
 }
 
+function errorResponse(message, status) {
+  return NextResponse.json(
+    { success: false, message, error: message },
+    { status }
+  );
+}
+
 export async function POST(request) {
   if (!cloudinaryReady) {
-    return NextResponse.json(
-      { error: "Uploads are unavailable right now. Please try again later." },
-      { status: 503 }
+    return errorResponse(
+      "Uploads are unavailable right now. Please try again later.",
+      503
     );
   }
 
@@ -62,19 +69,13 @@ export async function POST(request) {
     try {
       formData = await request.formData();
     } catch {
-      return NextResponse.json(
-        { error: "Please select an audio file and cover image." },
-        { status: 400 }
-      );
+      return errorResponse("Please select an audio file and cover image.", 400);
     }
     const audio = formData.get("audio");
     const cover = formData.get("cover");
 
     if (!audio || !cover) {
-      return NextResponse.json(
-        { error: "Please select an audio file and cover image." },
-        { status: 400 }
-      );
+      return errorResponse("Please select an audio file and cover image.", 400);
     }
 
     const audioType = AUDIO_TYPES.has(audio.type)
@@ -85,31 +86,25 @@ export async function POST(request) {
       : guessImageType(cover.name);
 
     if (!audioType) {
-      return NextResponse.json(
-        { error: "Invalid audio format. Please upload an MP3, WAV, M4A, or OGG file." },
-        { status: 400 }
+      return errorResponse(
+        "Invalid audio format. Please upload an MP3, WAV, M4A, or OGG file.",
+        400
       );
     }
 
     if (!coverType) {
-      return NextResponse.json(
-        { error: "Invalid image format. Please upload a JPG, PNG, or WebP file." },
-        { status: 400 }
+      return errorResponse(
+        "Invalid image format. Please upload a JPG, PNG, or WebP file.",
+        400
       );
     }
 
     if (audio.size > MAX_AUDIO_SIZE) {
-      return NextResponse.json(
-        { error: "Audio file is too large. Maximum size is 25MB." },
-        { status: 400 }
-      );
+      return errorResponse("Audio file is too large. Maximum size is 25MB.", 400);
     }
 
     if (cover.size > MAX_IMAGE_SIZE) {
-      return NextResponse.json(
-        { error: "Cover image is too large. Maximum size is 8MB." },
-        { status: 400 }
-      );
+      return errorResponse("Cover image is too large. Maximum size is 8MB.", 400);
     }
 
     const audioBuffer = Buffer.from(await audio.arrayBuffer());
@@ -130,6 +125,7 @@ export async function POST(request) {
     });
 
     return NextResponse.json({
+      success: true,
       audioUrl: audioResult.secure_url,
       coverUrl: coverResult.secure_url,
       audioPublicId: audioResult.public_id,
@@ -138,9 +134,6 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("POST /api/upload failed:", error);
-    return NextResponse.json(
-      { error: "Upload failed. Please try again." },
-      { status: 500 }
-    );
+    return errorResponse("Upload failed. Please try again.", 500);
   }
 }

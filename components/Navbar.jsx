@@ -121,7 +121,7 @@ export default function Navbar() {
             Login
           </Link>
           <Link
-            href="/discover"
+            href="/signup"
             className="btn-gradient rounded-full px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition duration-300 hover:brightness-110 hover:shadow-purple-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70"
           >
             Get Started
@@ -239,13 +239,22 @@ export default function Navbar() {
                     </button>
                   </>
                 ) : (
-                  <Link
-                    href="/login"
-                    onClick={() => setOpen(false)}
-                    className="btn-gradient rounded-full px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-purple-500/25"
-                  >
-                    Login
-                  </Link>
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setOpen(false)}
+                      className="rounded-full border border-white/10 px-5 py-3 text-center text-sm font-semibold text-zinc-300 transition hover:border-white/20 hover:text-white"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/signup"
+                      onClick={() => setOpen(false)}
+                      className="btn-gradient rounded-full px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-purple-500/25"
+                    >
+                      Get Started
+                    </Link>
+                  </>
                 )}
               </div>
             )}

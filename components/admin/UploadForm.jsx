@@ -26,8 +26,15 @@ export default function UploadForm() {
   const [success, setSuccess] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  function dismissNotice() {
+    if (uploading) return;
+    setStatus("");
+    setSuccess(false);
+  }
+
   function updateField(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
+    dismissNotice();
   }
 
   function handleAudio(e) {
@@ -36,29 +43,32 @@ export default function UploadForm() {
     setAudio(file);
     setAudioPreview(file.name);
     setError("");
+    dismissNotice();
   }
 
   function handleCover(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
     setCover(file);
     setCoverPreview(URL.createObjectURL(file));
     setError("");
+    dismissNotice();
   }
 
-  function clearAll() {
-    setForm(EMPTY_FORM);
+  function resetForm() {
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+    setForm({ ...EMPTY_FORM });
     setAudio(null);
     setCover(null);
     setAudioPreview("");
     setCoverPreview("");
-    setStatus("");
-    setError("");
-    setSuccess(false);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (uploading) return;
 
     if (!form.title.trim()) {
       setError("Please enter a song title.");
@@ -88,7 +98,6 @@ export default function UploadForm() {
     try {
       setStatus("Uploading audio...");
       const uploaded = await uploadFiles(audio, cover);
-      setStatus("Uploading cover...");
 
       setStatus("Saving song...");
       await createSong({
@@ -105,12 +114,13 @@ export default function UploadForm() {
 
       setStatus("Upload complete!");
       setSuccess(true);
-      clearAll();
+      resetForm();
       router.refresh();
     } catch (err) {
       setError(err.message || "Upload failed. Please try again.");
-      setUploading(false);
       setStatus("");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -186,18 +196,18 @@ export default function UploadForm() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <label className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/15 p-6 text-center transition hover:border-purple-400/40 hover:bg-white/[0.02]">
-            <Music size={26} className="mb-2 text-purple-300" />
-            <span className="text-sm font-medium text-white">
+          <label className="group flex min-w-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-white/15 p-6 text-center transition hover:border-purple-400/40 hover:bg-white/[0.02]">
+            <Music size={26} className="mb-2 shrink-0 text-purple-300" />
+            <span className="block w-full max-w-full min-w-0 truncate text-sm font-medium text-white">
               {audioPreview || "Choose Audio File"}
             </span>
             <span className="mt-1 text-xs text-zinc-500">
               MP3, WAV, M4A, OGG · up to 25MB
             </span>
             {audioPreview && (
-              <span className="mt-3 flex items-center gap-2 rounded-full bg-purple-500/10 px-3 py-1 text-[11px] font-medium text-purple-300">
-                <Music size={12} />
-                {audioPreview}
+              <span className="mt-3 flex min-w-0 max-w-full items-center gap-2 overflow-hidden rounded-full bg-purple-500/10 px-3 py-1 text-[11px] font-medium text-purple-300">
+                <Music size={12} className="shrink-0" />
+                <span className="min-w-0 flex-1 truncate">{audioPreview}</span>
               </span>
             )}
             <input
@@ -208,22 +218,27 @@ export default function UploadForm() {
             />
           </label>
 
-          <label className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/15 p-6 text-center transition hover:border-pink-400/40 hover:bg-white/[0.02]">
-            <ImageIcon size={26} className="mb-2 text-pink-300" />
-            <span className="text-sm font-medium text-white">
+          <label className="group flex min-w-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-white/15 p-6 text-center transition hover:border-pink-400/40 hover:bg-white/[0.02]">
+            <ImageIcon size={26} className="mb-2 shrink-0 text-pink-300" />
+            <span className="block w-full max-w-full min-w-0 truncate text-sm font-medium text-white">
               {coverPreview ? "Cover selected" : "Choose Cover Image"}
             </span>
             <span className="mt-1 text-xs text-zinc-500">
               JPG, PNG, WebP · up to 8MB
             </span>
             {coverPreview && (
-              <span className="relative mt-3 inline-block h-16 w-16 overflow-hidden rounded-xl border border-white/10">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={coverPreview}
-                  alt="Cover preview"
-                  className="h-full w-full object-cover"
-                />
+              <span className="mt-3 flex min-w-0 max-w-full items-center gap-2 overflow-hidden">
+                <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-white/10">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={coverPreview}
+                    alt="Cover preview"
+                    className="h-full w-full object-cover"
+                  />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-zinc-400">
+                  {cover?.name || "Cover selected"}
+                </span>
               </span>
             )}
             <input
@@ -245,7 +260,7 @@ export default function UploadForm() {
           <div className="flex items-start gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
             <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
             <div>
-              <p className="font-semibold">Upload complete!</p>
+              <p className="font-semibold">Song uploaded successfully!</p>
               <p className="mt-0.5 text-emerald-200/80">
                 Your song was added to the library.
               </p>

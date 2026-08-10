@@ -5,11 +5,9 @@ import CoverImage from "@/components/CoverImage";
 import Equalizer from "@/components/Equalizer";
 import { useMusicPlayer } from "@/context/MusicPlayerContext";
 
-export default function Hero({ songs = [] }) {
-  const { currentSong, isPlaying, playSong } = useMusicPlayer();
-  const featured = songs[0] || null;
-  const featuredIsPlaying =
-    isPlaying && currentSong && featured && currentSong.id === featured.id;
+export default function Hero() {
+  const { currentSong, isPlaying, togglePlay } = useMusicPlayer();
+  const isSongPlaying = isPlaying && Boolean(currentSong);
 
   return (
     <section className="relative overflow-hidden">
@@ -61,12 +59,12 @@ export default function Hero({ songs = [] }) {
           <div className="relative">
             <div
               className={`relative aspect-square overflow-hidden rounded-full border border-white/10 shadow-2xl shadow-purple-900/40 ${
-                featuredIsPlaying ? "animate-spin-slow" : ""
+                isSongPlaying ? "animate-spin-slow" : ""
               }`}
             >
               <CoverImage
-                src={featured?.coverUrl}
-                alt={featured ? `${featured.title} by ${featured.artist}` : "VibeFlow"}
+                src={currentSong?.coverUrl}
+                alt={currentSong ? `${currentSong.title} by ${currentSong.artist}` : "VibeFlow"}
                 className="scale-110"
               />
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/30 to-transparent" />
@@ -78,18 +76,18 @@ export default function Hero({ songs = [] }) {
               </div>
             </div>
 
-            {featured ? (
+            {currentSong ? (
               <button
                 type="button"
                 aria-label={
-                  featuredIsPlaying
-                    ? `Pause ${featured.title}`
-                    : `Play ${featured.title}`
+                  isSongPlaying
+                    ? `Pause ${currentSong.title}`
+                    : `Play ${currentSong.title}`
                 }
-                onClick={() => playSong(featured, songs)}
+                onClick={togglePlay}
                 className="btn-gradient absolute right-4 bottom-4 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl shadow-purple-500/40 transition duration-300 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                {featuredIsPlaying ? (
+                {isSongPlaying ? (
                   <Pause size={24} className="fill-current" />
                 ) : (
                   <Play size={24} className="ml-0.5 fill-current" />
@@ -99,25 +97,23 @@ export default function Hero({ songs = [] }) {
               <button
                 type="button"
                 disabled
-                aria-label="No songs available yet"
+                aria-label="No song selected yet"
                 className="absolute right-4 bottom-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-700 text-zinc-400 shadow-xl"
               >
                 <Play size={24} className="ml-0.5 fill-current" />
               </button>
             )}
 
-            {featured && (
+            {currentSong && (
               <div className="animate-pop absolute bottom-4 -left-2 max-w-[11rem] rounded-2xl border border-white/10 bg-black/60 p-3 shadow-xl backdrop-blur-xl sm:-left-6">
                 <div className="flex items-center gap-2.5">
-                  {currentSong && currentSong.id === featured.id && (
-                    <Equalizer active={isPlaying} className="text-purple-300" />
-                  )}
+                  <Equalizer active={isPlaying} className="text-purple-300" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-white">
-                      {featured.title}
+                      {currentSong.title}
                     </p>
                     <p className="truncate text-xs text-zinc-400">
-                      {featured.artist}
+                      {currentSong.artist}
                     </p>
                   </div>
                 </div>

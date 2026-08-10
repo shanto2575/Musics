@@ -1,43 +1,68 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "vibeflow-likes";
 
-let cachedLikes = null;
+const emptyLikes = {};
+
+let cachedRaw = null;
+let cachedLikes = emptyLikes;
+const listeners = new Set();
 
 function readLikes() {
-  if (cachedLikes) return cachedLikes;
   try {
-    cachedLikes =
-      typeof window === "undefined"
-        ? {}
-        : JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw !== cachedRaw) {
+      cachedRaw = raw;
+      cachedLikes = raw ? JSON.parse(raw) : emptyLikes;
+    }
   } catch {
-    cachedLikes = {};
+    cachedLikes = emptyLikes;
   }
   return cachedLikes;
 }
 
+function getServerSnapshot() {
+  return emptyLikes;
+}
+
+function emitChange() {
+  for (const listener of listeners) listener();
+}
+
+function onStorage(event) {
+  if (event.key !== null && event.key !== STORAGE_KEY) return;
+  readLikes();
+  emitChange();
+}
+
+function subscribe(callback) {
+  listeners.add(callback);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(callback);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 export function useLikes() {
-  const [liked, setLiked] = useState(readLikes);
+  const liked = useSyncExternalStore(subscribe, readLikes, getServerSnapshot);
 
   const toggleLike = useCallback((id) => {
-    setLiked((prev) => {
-      const next = { ...prev };
-      if (next[id]) {
-        delete next[id];
-      } else {
-        next[id] = true;
-      }
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        /* ignore storage errors */
-      }
-      cachedLikes = next;
-      return next;
-    });
+    const current = readLikes();
+    const next = { ...current };
+    if (next[id]) {
+      delete next[id];
+    } else {
+      next[id] = true;
+    }
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore storage errors */
+    }
+    emitChange();
   }, []);
 
   return { liked, toggleLike };

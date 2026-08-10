@@ -21,7 +21,7 @@ export default async function HomePage() {
     <>
       <Navbar />
       <main className="flex-1 pb-28">
-        <Hero songs={songs} />
+        <Hero />
         <FeaturedTracks songs={songs} />
         <PopularArtists songs={songs} />
         <TrendingPlaylists songs={songs} />

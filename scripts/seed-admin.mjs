@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
@@ -32,6 +32,7 @@ const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const USER_EMAIL = (process.env.USER_EMAIL || "").toLowerCase();
 const USER_PASSWORD = process.env.USER_PASSWORD || "";
+const USER_NAME = process.env.USER_NAME || "VibeFlow User";
 
 if (!MONGODB_URI) {
   console.error("MONGODB_URI is not set in .env.local or the environment.");
@@ -62,36 +63,102 @@ const auth = betterAuth({
   },
 });
 
-async function userExists(email) {
-  return Boolean(await db.collection("user").findOne({ email }));
-}
-
 async function createUser(name, email, password) {
   const result = await auth.api.signUpEmail({ body: { name, email, password } });
   return result.user;
+}
+
+async function canLogin(email, password) {
+  try {
+    const result = await auth.api.signInEmail({ body: { email, password } });
+    return Boolean(result.user);
+  } catch {
+    return false;
+  }
+}
+
+async function deleteUserByEmail(email) {
+  const user = await db.collection("user").findOne({ email });
+  if (!user) return false;
+  const userId = user._id;
+  await db.collection("session").deleteMany({ userId: new ObjectId(userId) });
+  await db.collection("account").deleteMany({ userId: new ObjectId(userId) });
+  await db.collection("user").deleteOne({ email });
+  return true;
+}
+
+async function seedAccount({ name, email, password, role }) {
+  const existing = await db.collection("user").findOne({ email });
+
+  if (existing) {
+    if (await canLogin(email, password)) {
+      if ((existing.role || "user") !== role) {
+        await db.collection("user").updateOne({ email }, { $set: { role } });
+        console.log(`${role} ${email} exists with current credentials; updated role to ${role}.`);
+      } else {
+        console.log(`${role} ${email} already exists with current credentials.`);
+      }
+      return;
+    }
+
+    await deleteUserByEmail(email);
+    const user = await createUser(name, email, password);
+    await db.collection("user").updateOne({ email: user.email }, { $set: { role } });
+    console.log(`${role} ${email} existed with stale credentials; recreated with role ${role}.`);
+    return;
+  }
+
+  const user = await createUser(name, email, password);
+  await db.collection("user").updateOne({ email: user.email }, { $set: { role } });
+  console.log(`Created ${role} account ${user.email} (role: ${role}).`);
+}
+
+async function clearSeedSessions() {
+  const users = await db
+    .collection("user")
+    .find({ email: { $in: [ADMIN_EMAIL, USER_EMAIL].filter(Boolean) } })
+    .toArray();
+  const ids = users.map((u) => u._id);
+  if (ids.length > 0) {
+    await db.collection("session").deleteMany({ userId: { $in: ids } });
+  }
 }
 
 async function main() {
   await client.connect();
   console.log("Connected to MongoDB.");
 
-  if (await userExists(ADMIN_EMAIL)) {
-    console.log(`Admin already exists (${ADMIN_EMAIL}). Nothing to do.`);
-  } else {
-    const user = await createUser(ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await db.collection("user").updateOne({ email: user.email }, { $set: { role: "admin" } });
-    console.log(`Created admin account: ${user.email} (role: admin).`);
+  await seedAccount({
+    name: ADMIN_NAME,
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
+    role: "admin",
+  });
+
+  const conflictingAdmins = await db
+    .collection("user")
+    .find({ role: "admin", email: { $ne: ADMIN_EMAIL } })
+    .toArray();
+  for (const doc of conflictingAdmins) {
+    await db.collection("user").updateOne({ _id: doc._id }, { $set: { role: "user" } });
+    console.log(`Demoted conflicting admin account ${doc.email} to role user.`);
   }
 
   if (USER_EMAIL && USER_PASSWORD) {
-    if (await userExists(USER_EMAIL)) {
-      console.log(`User already exists (${USER_EMAIL}). Nothing to do.`);
-    } else {
-      const user = await createUser("VibeFlow User", USER_EMAIL, USER_PASSWORD);
-      console.log(`Created normal user: ${user.email} (role: user).`);
-    }
+    await seedAccount({
+      name: USER_NAME,
+      email: USER_EMAIL,
+      password: USER_PASSWORD,
+      role: "user",
+    });
+
+    await db.collection("user").updateOne(
+      { email: USER_EMAIL },
+      { $set: { role: "user" } }
+    );
   }
 
+  await clearSeedSessions();
   console.log("Seed complete. Passwords are stored only in .env.local.");
   await client.close();
 }

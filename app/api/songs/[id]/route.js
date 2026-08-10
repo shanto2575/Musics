@@ -12,26 +12,30 @@ function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
 }
 
+function errorResponse(message, status) {
+  return NextResponse.json(
+    { success: false, message, error: message },
+    { status }
+  );
+}
+
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
     if (!isValidId(id)) {
-      return NextResponse.json({ error: "Invalid song id." }, { status: 400 });
+      return errorResponse("Invalid song id.", 400);
     }
 
     await connectToDatabase();
     const song = await Song.findById(id).lean();
     if (!song) {
-      return NextResponse.json({ error: "Song not found." }, { status: 404 });
+      return errorResponse("Song not found.", 404);
     }
 
-    return NextResponse.json({ song: serializeSong(song) });
+    return NextResponse.json({ success: true, song: serializeSong(song) });
   } catch (error) {
     console.error("GET /api/songs/[id] failed:", error);
-    return NextResponse.json(
-      { error: "Failed to load song. Please try again." },
-      { status: 500 }
-    );
+    return errorResponse("Failed to load song. Please try again.", 500);
   }
 }
 
@@ -44,7 +48,7 @@ export async function PATCH(request, { params }) {
 
     const { id } = await params;
     if (!isValidId(id)) {
-      return NextResponse.json({ error: "Invalid song id." }, { status: 400 });
+      return errorResponse("Invalid song id.", 400);
     }
 
     const body = await request.json();
@@ -54,16 +58,10 @@ export async function PATCH(request, { params }) {
       if (body[field] !== undefined) {
         const value = String(body[field]).trim();
         if (field === "title" && !value) {
-          return NextResponse.json(
-            { error: "Song title is required." },
-            { status: 400 }
-          );
+          return errorResponse("Song title is required.", 400);
         }
         if (field === "artist" && !value) {
-          return NextResponse.json(
-            { error: "Artist name is required." },
-            { status: 400 }
-          );
+          return errorResponse("Artist name is required.", 400);
         }
         updates[field] = value;
       }
@@ -85,7 +83,7 @@ export async function PATCH(request, { params }) {
     await connectToDatabase();
     const song = await Song.findById(id);
     if (!song) {
-      return NextResponse.json({ error: "Song not found." }, { status: 404 });
+      return errorResponse("Song not found.", 404);
     }
 
     const previous = {
@@ -107,13 +105,10 @@ export async function PATCH(request, { params }) {
       ].filter(Boolean));
     }
 
-    return NextResponse.json({ song: serializeSong(song) });
+    return NextResponse.json({ success: true, song: serializeSong(song) });
   } catch (error) {
     console.error("PATCH /api/songs/[id] failed:", error);
-    return NextResponse.json(
-      { error: "Failed to update song. Please try again." },
-      { status: 500 }
-    );
+    return errorResponse("Failed to update song. Please try again.", 500);
   }
 }
 
@@ -126,13 +121,13 @@ export async function DELETE(request, { params }) {
 
     const { id } = await params;
     if (!isValidId(id)) {
-      return NextResponse.json({ error: "Invalid song id." }, { status: 400 });
+      return errorResponse("Invalid song id.", 400);
     }
 
     await connectToDatabase();
     const song = await Song.findById(id);
     if (!song) {
-      return NextResponse.json({ error: "Song not found." }, { status: 404 });
+      return errorResponse("Song not found.", 404);
     }
 
     await Song.deleteOne({ _id: id });
@@ -145,9 +140,6 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE /api/songs/[id] failed:", error);
-    return NextResponse.json(
-      { error: "Failed to delete song. Please try again." },
-      { status: 500 }
-    );
+    return errorResponse("Failed to delete song. Please try again.", 500);
   }
 }
