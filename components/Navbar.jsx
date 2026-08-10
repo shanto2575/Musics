@@ -143,7 +143,7 @@ export default function Navbar() {
             <AudioLines size={20} className="text-white" />
           </span>
           <span>
-            Vibe<span className="text-gradient">Flow</span>
+            SONI<span className="text-gradient">VA</span>
           </span>
         </Link>
 

@@ -3,7 +3,7 @@
 import { Play, Pause } from "lucide-react";
 import CoverImage from "@/components/CoverImage";
 import Equalizer from "@/components/Equalizer";
-import MusicVisualizer from "@/components/MusicVisualizer";
+import MusicPlayerPanel from "@/components/MusicPlayerPanel";
 import { useMusicPlayer } from "@/context/MusicPlayerContext";
 
 export default function Hero() {
@@ -23,7 +23,7 @@ export default function Hero() {
 
       <div className="mx-auto grid w-full max-w-7xl items-center gap-14 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-2 lg:gap-10 lg:px-8 lg:pt-24 lg:pb-28">
         <div className="animate-fade-up">
-          <MusicVisualizer />
+          <MusicPlayerPanel />
         </div>
 
         <div className="animate-fade-up relative mx-auto w-full max-w-sm [animation-delay:150ms]">

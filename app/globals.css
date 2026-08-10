@@ -127,7 +127,6 @@ body {
 .viz-panel {
   position: relative;
   overflow: hidden;
-  padding: 1.5rem;
   border-radius: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background:
@@ -144,20 +143,20 @@ body {
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  height: 10rem;
+  height: 10.5rem;
 }
 
 @media (min-width: 640px) {
   .viz-grid {
     gap: 5px;
-    height: 12.5rem;
+    height: 12rem;
   }
 }
 
 @media (min-width: 1024px) {
   .viz-grid {
     gap: 6px;
-    height: 16rem;
+    height: 15rem;
   }
 }
 
