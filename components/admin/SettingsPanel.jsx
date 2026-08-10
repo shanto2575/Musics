@@ -58,7 +58,7 @@ export default function SettingsPanel({ dbReady, cloudinaryReady }) {
         {services.map(({ name, description, ready, env, icon: Icon }) => (
           <div
             key={name}
-            className="rounded-3xl border border-white/5 bg-elevated p-5"
+            className="rounded-3xl border border-white/5 bg-elevated p-5 shadow-lg transition duration-300 hover:border-purple-400/20"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -71,13 +71,13 @@ export default function SettingsPanel({ dbReady, cloudinaryReady }) {
                 </div>
               </div>
               {ready ? (
-                <span className="flex items-center gap-1 text-xs font-medium text-emerald-400">
-                  <CheckCircle2 size={15} />
+                <span className="flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
+                  <CheckCircle2 size={14} />
                   Connected
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-xs font-medium text-red-400">
-                  <XCircle size={15} />
+                <span className="flex items-center gap-1 rounded-full border border-red-400/20 bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400">
+                  <XCircle size={14} />
                   Not set
                 </span>
               )}

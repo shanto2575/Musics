@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { MusicPlayerProvider } from "@/context/MusicPlayerContext";
+import { ToastProvider } from "@/components/ui/Toast";
 import MusicPlayer from "@/components/MusicPlayer";
 
 const geistSans = Geist({
@@ -36,8 +37,10 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col bg-background text-zinc-100">
         <MusicPlayerProvider>
-          {children}
-          <MusicPlayer />
+          <ToastProvider>
+            {children}
+            <MusicPlayer />
+          </ToastProvider>
         </MusicPlayerProvider>
       </body>
     </html>

@@ -19,14 +19,30 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { useMusicPlayer } from "@/context/MusicPlayerContext";
 
-const NAV_ITEMS = [
-  { label: "Home", href: "/", icon: ExternalLink },
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Songs", href: "/admin/songs", icon: Music },
-  { label: "Upload Song", href: "/admin/upload", icon: UploadCloud },
-  { label: "Artists", href: "/admin/artists", icon: Users },
-  { label: "Playlists", href: "/admin/playlists", icon: ListMusic },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+const NAV_GROUPS = [
+  {
+    label: "General",
+    items: [{ label: "Home", href: "/", icon: ExternalLink }],
+  },
+  {
+    label: "Manage",
+    items: [
+      { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+      { label: "Songs", href: "/admin/songs", icon: Music },
+      { label: "Upload Song", href: "/admin/upload", icon: UploadCloud },
+    ],
+  },
+  {
+    label: "Library",
+    items: [
+      { label: "Artists", href: "/admin/artists", icon: Users },
+      { label: "Playlists", href: "/admin/playlists", icon: ListMusic },
+    ],
+  },
+  {
+    label: "System",
+    items: [{ label: "Settings", href: "/admin/settings", icon: Settings }],
+  },
 ];
 
 export default function AdminSidebar() {
@@ -76,30 +92,40 @@ export default function AdminSidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3">
-        {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
-          const active =
-            href === "/"
-              ? pathname === "/"
-              : href === "/admin"
-                ? pathname === "/admin"
-                : pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition ${
-                active
-                  ? "btn-gradient text-white shadow-lg shadow-purple-500/25"
-                  : "text-zinc-400 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pt-2 pb-4">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label}>
+            <p className="mb-1.5 px-3.5 text-[10px] font-semibold tracking-widest text-zinc-600 uppercase">
+              {group.label}
+            </p>
+            <div className="space-y-1">
+              {group.items.map(({ label, href, icon: Icon }) => {
+                const active =
+                  href === "/"
+                    ? pathname === "/"
+                    : href === "/admin"
+                      ? pathname === "/admin"
+                      : pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition ${
+                      active
+                        ? "btn-gradient text-white shadow-lg shadow-purple-500/25"
+                        : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                    }`}
+                  >
+                    <Icon size={18} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="border-t border-white/5 p-3">

@@ -6,6 +6,7 @@ import TrendingPlaylists from "@/components/TrendingPlaylists";
 import LibrarySection from "@/components/LibrarySection";
 import Footer from "@/components/Footer";
 import { getAllSongs } from "@/lib/songs";
+import { countUniqueGenres, uniqueArtists } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +18,17 @@ export default async function HomePage() {
     console.error("Failed to load songs on home page:", error);
   }
 
+  const heroStats = {
+    songs: songs.length,
+    artists: uniqueArtists(songs).length,
+    genres: countUniqueGenres(songs),
+  };
+
   return (
     <>
       <Navbar />
       <main className="flex-1 pb-28">
-        <Hero />
+        <Hero stats={heroStats} />
         <FeaturedTracks songs={songs} />
         <PopularArtists songs={songs} />
         <TrendingPlaylists songs={songs} />

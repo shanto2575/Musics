@@ -15,7 +15,7 @@ export default function Footer() {
                 <AudioLines size={20} className="text-white" />
               </span>
               <span>
-                SONI<span className="text-gradient">VA</span>
+                Vibe<span className="text-gradient">Flow</span>
               </span>
             </Link>
             <p className="mt-4 max-w-sm text-sm text-zinc-500">

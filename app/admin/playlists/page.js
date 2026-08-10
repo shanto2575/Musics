@@ -29,7 +29,11 @@ export default async function AdminPlaylistsPage() {
   return (
     <>
       <div className="mb-8">
-        <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
+        <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-[11px] font-semibold tracking-widest text-purple-300 uppercase">
+          <span className="h-1.5 w-1.5 rounded-full bg-pink-400" aria-hidden="true" />
+          Library
+        </p>
+        <h1 className="font-heading text-2xl font-bold tracking-tight text-white sm:text-3xl">
           Playlists
         </h1>
         <p className="mt-1 text-sm text-zinc-400">

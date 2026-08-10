@@ -103,10 +103,13 @@ export default function Navbar() {
       accountArea = (
         <>
           <span
-            className="flex h-10 max-w-40 items-center truncate rounded-full border border-white/10 bg-white/5 px-4 text-sm font-medium text-zinc-200"
+            className="flex h-10 max-w-44 items-center gap-2 truncate rounded-full border border-white/10 bg-white/5 py-1 pr-4 pl-1 text-sm font-medium text-zinc-200"
             title={session.user?.email || displayName}
           >
-            {displayName}
+            <span className="btn-gradient flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
+              {displayName.charAt(0).toUpperCase()}
+            </span>
+            <span className="truncate">{displayName}</span>
           </span>
           {logoutButton}
         </>
@@ -143,7 +146,7 @@ export default function Navbar() {
             <AudioLines size={20} className="text-white" />
           </span>
           <span>
-            SONI<span className="text-gradient">VA</span>
+            Vibe<span className="text-gradient">Flow</span>
           </span>
         </Link>
 

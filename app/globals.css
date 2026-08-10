@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #060607;
-  --color-surface: #0c0c0f;
-  --color-elevated: #141418;
+  --color-background: #060609;
+  --color-surface: #0b0b10;
+  --color-elevated: #12121a;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-space-grotesk), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 
   --animate-fade-up: fade-up 0.7s ease-out both;
-  --animate-spin-slow: spin 14s linear infinite;
-  --animate-glow: glow 5s ease-in-out infinite;
-  --animate-pop: pop 0.25s ease-out both;
+  --animate-spin-slow: spin 16s linear infinite;
+  --animate-glow: glow 6s ease-in-out infinite;
+  --animate-pop: pop 0.22s ease-out both;
+  --animate-toast-in: toast-in 0.25s ease-out both;
 }
 
 @keyframes fade-up {
@@ -37,10 +38,10 @@
 @keyframes glow {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.4;
   }
   50% {
-    opacity: 0.9;
+    opacity: 0.8;
   }
 }
 
@@ -52,6 +53,17 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -76,6 +88,54 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Subtle ambient background for the whole app */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(139, 92, 246, 0.07), transparent 60%),
+    radial-gradient(50rem 36rem at -10% 110%, rgba(236, 72, 153, 0.05), transparent 60%);
+}
+
+/* Consistent global focus state for keyboard navigation */
+:focus-visible {
+  outline: 2px solid rgba(168, 85, 247, 0.65);
+  outline-offset: 2px;
+}
+
+/* Subtle native selection color */
+::selection {
+  background: rgba(168, 85, 247, 0.35);
+  color: #fff;
+}
+
+/* Thin dark scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .text-gradient {
   background: linear-gradient(90deg, #a78bfa, #e879f9, #f472b6);
   -webkit-background-clip: text;
@@ -86,6 +146,19 @@ body {
 
 .btn-gradient {
   background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 55%, #ec4899 100%);
+}
+
+/* Card surface shared by cards across the app */
+.card-glass {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Soft top highlight used on hero + key panels */
+.panel-glow {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px rgba(0, 0, 0, 0.55);
 }
 
 /* Equalizer animation */
@@ -247,4 +320,31 @@ input[type="range"] {
   appearance: none;
   background: transparent;
   cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 3px solid #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+}
+
+/* Respect users who prefer reduced motion: collapse decorative motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

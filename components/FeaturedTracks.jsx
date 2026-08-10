@@ -8,15 +8,18 @@ export default function FeaturedTracks({ songs }) {
   const featured = songs.slice(0, 6);
 
   return (
-    <section id="featured" className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section
+      id="featured"
+      className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
+    >
       <SectionHeading
         eyebrow="Top picks"
-        title="Featured Tracks"
-        description="Hand-picked tracks from the VibeFlow library to get you started."
+        title="Popular Songs"
+        description="The tracks everyone is vibing to right now."
         action={
           <Link
             href="/discover"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-400 transition hover:text-purple-300"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-400 transition hover:text-purple-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70 rounded-full"
           >
             View all
             <ArrowRight size={16} />

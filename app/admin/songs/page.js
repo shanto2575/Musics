@@ -18,9 +18,13 @@ export default async function AdminSongsPage() {
 
   return (
     <>
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
+          <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-[11px] font-semibold tracking-widest text-purple-300 uppercase">
+            <span className="h-1.5 w-1.5 rounded-full bg-pink-400" aria-hidden="true" />
+            Library
+          </p>
+          <h1 className="font-heading text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Songs
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
@@ -29,7 +33,7 @@ export default async function AdminSongsPage() {
         </div>
         <Link
           href="/admin/upload"
-          className="btn-gradient inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition hover:brightness-110"
+          className="btn-gradient inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition hover:brightness-110"
         >
           <UploadCloud size={16} />
           Upload Song
