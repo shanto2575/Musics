@@ -4,6 +4,7 @@ import { AudioLines } from "lucide-react";
 export default function AuthShell({ title, subtitle, children, footer }) {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-16">
+      {/* Background decorations – keep behind */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10"
@@ -20,6 +21,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
         />
       </div>
 
+      {/* Logo - always clickable */}
       <Link
         href="/"
         className="animate-fade-up mb-10 flex items-center gap-2.5 font-heading text-2xl font-bold tracking-tight"
@@ -31,11 +33,14 @@ export default function AuthShell({ title, subtitle, children, footer }) {
         Vibe<span className="text-gradient">Flow</span>
       </Link>
 
-      <div className="animate-fade-up relative w-full max-w-md [animation-delay:100ms]">
+      {/* Main card container - keep content on top */}
+      <div className="animate-fade-up relative w-full max-w-md [animation-delay:100ms] z-10">
+        {/* Decorative glow behind card */}
         <div
           aria-hidden="true"
-          className="absolute -inset-1 rounded-[2.25rem] bg-gradient-to-r from-purple-500/25 via-fuchsia-500/10 to-pink-500/25 blur-xl"
+          className="pointer-events-none absolute -inset-1 rounded-[2.25rem] bg-gradient-to-r from-purple-500/25 via-fuchsia-500/10 to-pink-500/25 blur-xl"
         />
+        {/* Card itself */}
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-surface/85 p-8 shadow-2xl backdrop-blur-xl">
           <div
             aria-hidden="true"
@@ -49,8 +54,16 @@ export default function AuthShell({ title, subtitle, children, footer }) {
           )}
           {children}
         </div>
+
+        {/* FOOTER – placed outside the card, but inside the z-10 container */}
         {footer && (
-          <p className="mt-6 text-center text-sm text-zinc-400">{footer}</p>
+          <div
+            className="relative z-20 mt-6 text-center text-sm text-zinc-400"
+            // Optional: test click capture
+            // onClick={() => console.log('footer container clicked')}
+          >
+            {footer}
+          </div>
         )}
       </div>
     </main>

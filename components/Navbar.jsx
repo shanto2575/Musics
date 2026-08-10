@@ -146,7 +146,7 @@ export default function Navbar() {
             <AudioLines size={20} className="text-white" />
           </span>
           <span>
-            Vibe<span className="text-gradient">Flow</span>
+            SONI<span className="text-gradient">VA</span>
           </span>
         </Link>
 
@@ -167,13 +167,13 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Link
+          {/* <Link
             href="/discover"
             aria-label="Search music"
             className="flex h-10 w-10 items-center justify-center rounded-full text-zinc-300 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70"
           >
             <Search size={20} />
-          </Link>
+          </Link> */}
           {accountArea}
         </div>
 

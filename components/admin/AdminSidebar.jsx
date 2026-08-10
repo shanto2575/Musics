@@ -78,7 +78,7 @@ export default function AdminSidebar() {
             <AudioLines size={20} className="text-white" />
           </span>
           <span className="font-heading text-lg font-bold tracking-tight">
-            Vibe<span className="text-gradient">Flow</span>
+            SONI<span className="text-gradient">VA</span>
             <span className="ml-1.5 text-xs font-medium text-zinc-500">Admin</span>
           </span>
         </Link>
