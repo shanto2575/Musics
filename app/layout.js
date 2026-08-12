@@ -21,8 +21,8 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata = {
   title: {
-    default: "VibeFlow — Music that moves with you",
-    template: "%s | VibeFlow",
+    default: "SONIVA — Music that moves with you",
+    template: "%s | SONIVA",
   },
   description:
     "Discover new sounds, create your vibe, and enjoy your favorite music anywhere.",
